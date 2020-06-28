@@ -58,6 +58,14 @@ def GetClientId() :
 def GetClientSecret() :
     return GetKeyFromConfig(key="CLIENT_SECRET")
 
+def get_playlist_tracks(username,playlist_id):
+    results = sp.user_playlist_tracks(username,playlist_id)
+    tracks = results['items']
+    while results['next']:
+        results = sp.next(results)
+        tracks.extend(results['items'])
+    return tracks
+
 
 username = GetUserName()
 clientId = GetClientId()
@@ -74,10 +82,20 @@ token = util.prompt_for_user_token(username,scope,clientId,clientSecret, redirec
 sp = spotipy.Spotify(auth=token)
 
 userId = GetUserId(current_user = sp.current_user())
-
-playlistURL = str(input("Enter Playlist URL : "))
+playlistURL = str(input("Enter playlist URL: "))
 playlistSplit = playlistURL.split('/')
 playlistID = playlistSplit[len(playlistSplit) - 1]
+
+# Removing any further parameters from the URL
+if ((not playlistID.isalnum()) and not(playlistID == "")):
+    cleanID = playlistID
+    while not cleanID.isalnum():
+        cleanID = cleanID[:-1]
+    playlistID = cleanID
+
+
+# Creating a list of unlisted tracks
+unlisted_tracks = []
 
 f = open("GPMLibraryParsed.txt", encoding="utf8")
 for x in f:
@@ -91,3 +109,10 @@ for x in f:
         trackId = trackId.replace("spotify:track:", "")
         sp.current_user_saved_tracks_add(tracks=[trackId])
         sp.user_playlist_add_tracks(user = userId,playlist_id = playlistID, tracks=[trackId])
+    else:
+        unlisted_tracks.append(x)
+
+# Displaying unlisted tracks
+print("\n\n\nUnlisted tracks --- \n");
+for x in unlisted_tracks:
+    print(x[:-1])
