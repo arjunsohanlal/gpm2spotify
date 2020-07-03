@@ -3,11 +3,6 @@ import codecs
 
 api = Mobileclient()
 
-trackEntryStart = "sj#track"
-trackPrefix = "'title'"
-artistPrefix = "'artist'"
-delim = ","
-
 # Logging out before login
 api.logout()
 
@@ -23,28 +18,20 @@ api.login(email, app_pwd, android_id, locale='en_US')
 print('Login status: '+str(api.is_authenticated()))
 
 # Pulling all songs from thumbs up list
-response = str(api.get_top_songs())
+response = api.get_top_songs()
 
-index = 0
+# Writing to output TXT
 f = codecs.open("GPMLibraryParsed.txt", mode="w", encoding = "utf-8")
 result = ""
 
-while index < len(response) :
-    if  response.find(trackEntryStart, index) != -1 :
-        
-        index = response.index(trackEntryStart, index)
+for ele in response:
+	artist = str(ele['artist'])
+	song = str(ele['title'])
+	entry = artist + " " + song
+	result = entry + '\n'
 
-        titleIndex = response.index(trackPrefix, index) + 10
-        titleDelimIndex = response.index(delim, titleIndex) - 1
-
-        artistIndex = response.index(artistPrefix, index) + 11
-        artistDelimIndex = response.index(delim, artistIndex) - 1
-
-        result = result + response[artistIndex : artistDelimIndex] + " " + response[titleIndex : titleDelimIndex] + "\n"
-    
-    index = index + 1
-
-print("\n\nThumbs up tracks ---\n")
+print("\n\n\nImported Thumbs Up tracks -")
+print("========================================\n")
 print(result)
 f.write(result)
 f.close()
